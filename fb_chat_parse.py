@@ -22,9 +22,7 @@ class Data:
         self.threads.append(thread)
 
     def get_threads(self, people):
-        """Returns list of all threads of specified people.
-
-        Note that Facebook sometimes splits up a single chat into multiple threads."""
+        """Returns list of all threads of specified people."""
         return [i for i in self.threads if i.people == people]
 
     def get_indie_threads(self, person):
@@ -49,7 +47,7 @@ class Data:
         
     def get_my_messages(self):
         """Return list of all messages sent by me"""
-        return self.get_messages_by(me)
+        return self.get_messages_by(self.me)
            
     def parse(self, file_location):
         """Parse the downloaded Facebook message file.
@@ -96,14 +94,14 @@ class Data:
                 self.add_thread(thread)
             except TypeError:
                 print("No thread header, ignoring thread")
-                #Some threads don't have a header in messages.htm, for some reason I can't explain. This is really rare though, so it's no big deal.
+                #Some threads don't have a header in messages.htm.
 
         print("Load done.")
         
 class Thread:
-    def __init__(self, _people = [], _messages = []):
+    def __init__(self, _people = set([]), _messages = []):
         self.messages = _messages
-        self.people = _people
+        self.people = _people #note that people includes the user himself
     def add_message(self, message):
         self.messages.append(message)
     def __iter__(self):
