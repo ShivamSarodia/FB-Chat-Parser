@@ -7,7 +7,7 @@ import time
 class Data:
     """Class to store all imported data. Pickle this class to speed up future use."""
     
-    def __init__(self, _me, _threads = []):
+    def __init__(self, _me = "",  _threads = []):
         self.me = _me #The name of the person whose messages are being analyzed
         self.threads = _threads
 
@@ -27,25 +27,29 @@ class Data:
         Note that Facebook sometimes splits up a single chat into multiple threads."""
         return [i for i in self.threads if i.people == people]
 
-    def get_threads_with(self, person):
+    def get_indie_threads(self, person):
         """Returns all threads of individual chat with a person"""
         return self.get_threads({self.me, person})
         
     def get_messages(self, people):
-        """Return list of all messages in threads of specified people"""
+        """Returns list of all messages in threads of specified people"""
         return sum([thread.messages for thread in self.get_threads(people)], [])
 
-    def get_messages_with(self, person):
-        """Return list of all messages in individual chat with a person"""
+    def get_indie_messages(self, person):
+        """Returns list of all messages in individual chat with a person"""
         return self.get_messages({self.me, person})
-        
-    def get_total_message_list(self):
-        """Return list of all messages sent and received"""
+
+    def get_all_messages(self):
+        """Returns list of all messages sent and received"""
         return sum([thread.messages for thread in self.threads], [])
 
-    def get_my_message_list(self):
-        """Return list of all messages sent"""
-        return sum([thread.messages for thread in self.threads if thread.sender == self.me], [])
+    def get_messages_by(self, person):
+        """Returns list of all messages sent by a particular person"""
+        return [message for message in self.get_all_messages() if message.sender == person]
+        
+    def get_my_messages(self):
+        """Return list of all messages sent by me"""
+        return self.get_messages_by(me)
            
     def parse(self, file_location):
         """Parse the downloaded Facebook message file.
@@ -59,6 +63,8 @@ class Data:
         soup = BeautifulSoup(html_doc)
         print("Parse done.")
         print("Loading into thread...")
+
+        self.me = str(soup.find_all("h1")[0].string)
 
         threaditer = soup.find_all("div", class_ = "thread")
         for tel in threaditer:
