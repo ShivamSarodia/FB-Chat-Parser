@@ -82,7 +82,7 @@ class Data:
                         except IndexError:
                             pass
                     elif mel.name == "p":
-                        if mel.string == None: #this happens if there's no text in the message, e.g. meep/pusheen/etc
+                        if mel.string == None: #this happens if there's no text in the message
                             message.content = ""
                         else:
                             message.content = str(mel.string)
@@ -112,11 +112,15 @@ class Thread:
         self.messages[key] = item
     def __len__(self):
         return len(self.messages)
+    def __repr__(self):
+        return "<Thread of " + str(self.people) + ">"
         
 class Message:
     def __init__(self, _sender = None, _time = None, _content = ""):
         self.sender = _sender
         self.time = _time
         self.content = _content
+    def __repr__(self):
+        return "(" + str(self.time) + ") " + self.sender + ": " + self.content
     def __len__(self):
         return len(self.content)
