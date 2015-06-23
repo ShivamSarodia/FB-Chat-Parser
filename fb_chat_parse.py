@@ -19,6 +19,7 @@ class Data:
         
     def add_thread(self, thread):
         """Add thread to data structure"""
+        thread.flip()
         self.threads.append(thread)
 
     def get_threads(self, people):
@@ -102,6 +103,8 @@ class Thread:
     def __init__(self, _people = set([]), _messages = []):
         self.messages = _messages
         self.people = _people #note that people includes the user himself
+    def flip(self):
+        self.messages = self.messages[::-1]
     def add_message(self, message):
         self.messages.append(message)
     def __iter__(self):
