@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import sys
 from bs4 import BeautifulSoup
 from datetime import datetime
 import time
+import pickle
 
 class Data:
     """Class to store all imported data. Pickle this class to speed up future use."""
@@ -49,55 +51,6 @@ class Data:
     def get_my_messages(self):
         """Return list of all messages sent by me"""
         return self.get_messages_by(self.me)
-           
-    def parse(self, file_location):
-        """Parse the downloaded Facebook message file.
-
-        file_location should be the location of the messages.htm file"""
-        
-        html_doc = open(file_location, "rb")
-
-        print("Beginning parse...")
-        
-        soup = BeautifulSoup(html_doc)
-        print("Parse done.")
-        print("Loading into thread...")
-
-        self.me = str(soup.find_all("h1")[0].string)
-
-        threaditer = soup.find_all("div", class_ = "thread")
-        for tel in threaditer:
-            try:
-                thread = Thread(set(tel.contents[0].split(", ")), []) #set the people in conversation
-                message = Message()
-                
-                for mel in tel.children:
-                    if mel.name == None:
-                        #should only happen once, for the list of participants
-                        pass
-                    elif mel.name == "div":
-                        try:
-                            message.sender = str(mel.find_all("span", class_ = "user")[0].string)
-                            timestr = str(mel.find_all("span", class_ = "meta")[0].string[0:-4])
-                            message.time = datetime.strptime(timestr, "%A, %B %d, %Y at %I:%M%p")
-                        except IndexError:
-                            pass
-                    elif mel.name == "p":
-                        if mel.string == None: #this happens if there's no text in the message
-                            message.content = ""
-                        else:
-                            message.content = str(mel.string)
-
-                        thread.add_message(message)
-                        message = Message()
-                    else:
-                        print("Oh, dear me.") #this shouldn't happen
-                self.add_thread(thread)
-            except TypeError:
-                print("No thread header, ignoring thread")
-                #Some threads don't have a header in messages.htm.
-
-        print("Load done.")
         
 class Thread:
     def __init__(self, _people = set([]), _messages = []):
@@ -127,3 +80,71 @@ class Message:
         return "(" + str(self.time) + ") " + self.sender + ": " + self.content
     def __len__(self):
         return len(self.content)
+
+def load_data(file_name = "messages.p"):
+    try:
+        f = open(file_name, "rb")
+    except:
+        print("Could not open pickled messages at " + file_name + ". Have you generated it?")
+        return False
+    else:
+        return pickle.load(open(file_name, "rb"))
+
+if __name__ == "__main__":
+    messages_html = "messages.htm" if len(sys.argv) <= 1 else sys.argv[1]
+    pickled = "messages.p" if len(sys.argv) <= 2 else sys.argv[2]
+
+    d = Data()
+
+    try:
+        html_doc = open(messages_html, "rb")
+    except IOError:
+        print("Could not find messages.htm file")
+    else:
+        print("Beginning BeautifulSoup parse...")
+
+        soup = BeautifulSoup(html_doc)
+        print("Parse done.")
+        print("Loading into thread...")
+
+        d.me = str(soup.find_all("h1")[0].string)
+
+        thread_iter = soup.find_all("div", class_ = "thread")
+        for tel in thread_iter:
+            try:
+                thread = Thread(set(tel.contents[0].split(", ")), []) #create a new thread to populate
+                
+                message = Message() #create the first message to populate
+                for mel in tel.children:
+                    if mel.name == None:
+                        pass #should only happen once, for the list of participants
+                    elif mel.name == "div":
+                        try:
+                            message.sender = str(mel.find_all("span", class_ = "user")[0].string)
+                            timestr = str(mel.find_all("span", class_ = "meta")[0].string[0:-4])
+                            message.time = datetime.strptime(timestr, "%A, %B %d, %Y at %I:%M%p")
+                        except IndexError:
+                            pass
+                    elif mel.name == "p":
+                        if mel.string == None: #this happens if there's no text in the message
+                            message.content = ""
+                        else:
+                            message.content = str(mel.string)
+                            thread.add_message(message) #add the current message to the string
+                            message = Message() #create a new message to populate
+                    else:
+                        print("Something strange happened. Carrying on.") #this shouldn't happen
+                        
+                d.add_thread(thread)
+            except TypeError:
+                print("No thread header, ignoring thread") #Some threads don't have a header in messages.htm.
+
+        print("Load done. Pickling...")
+
+        with open(pickled, "wb") as f: pickle.dump(d, f)
+
+        print("Pickle saved. Done.")
+
+
+
+
