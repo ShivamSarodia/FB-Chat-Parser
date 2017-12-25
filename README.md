@@ -1,6 +1,8 @@
 FB-Chat-Parse
 ======
 
+**NOTE: The Facebook data download format has changed, so this tool no longer works. I'll update this repository shortly.**
+
 Parses Facebook messages into a format convenient for analysis. Based on Python 3; requires BeautifulSoup.
 
 To use, download your Facebook user data as described [here](https://www.facebook.com/help/131112897028467/), and unzip the provided file. To parse the messages into a pickled binary, call fb_chat_parse with arguments as below:
